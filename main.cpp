@@ -10,7 +10,12 @@ int main() {
     for (int i = 0; i < 4; ++i) {
         mytree.put(i, i);
     }
-    mytree.printTree();
-    cout << mytree.get(0, v)<<endl;
+    for (int i = 0; i < 4; ++i) {
+        mytree.update(i, i * i);
+    }
+    for (int i = 0; i < 4; ++i) {
+        cout << mytree.get(i, v) << endl;
+    }
+
     return 0;
 }

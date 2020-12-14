@@ -66,8 +66,13 @@ bptNode *BPlusTree::findParent(bptNode *node) {
 }
 
 int BPlusTree::findPlace(Key *keys, int nKeys, Key k) {
+    // if exist, return -1
     int place = nKeys;
     for (int i = 0; i < nKeys; ++i) {
+        if (k == keys[i]){
+            place = -1;
+            break;
+        }
         if (k < keys[i]) {
             place = i;
             break;
@@ -122,11 +127,13 @@ void BPlusTree::spliteInnerNode(bptNode *node, Key k, bptNode *leftChild, bptNod
     }
 }
 
-void BPlusTree::recursiveInsert(bptNode *tmproot, Key k, Value v) {
+bool BPlusTree::recursiveInsert(bptNode *tmproot, Key k, Value v) {
     if (tmproot->isLeaf) {
         //insert first
         KeyValue *tmpkv = new KeyValue(k, v);
         int place = findPlace(tmproot->keys, tmproot->nKeys, k);
+        if (place == -1) // k exists in B+Tree
+            return false;
         for (int i = tmproot->nKeys - 1; i >= place; --i) {
             tmproot->keys[i + 1] = tmproot->keys[i];
             tmproot->kv[i + 1] = tmproot->kv[i];
@@ -159,24 +166,24 @@ void BPlusTree::recursiveInsert(bptNode *tmproot, Key k, Value v) {
             spliteInnerNode(findParent(tmproot), rightNode->keys[0], leftNode, rightNode);
             delete tmproot;
         }
+        return true;
     } else {
         for (int i = 0; i < tmproot->nKeys; ++i) {
             if (k < tmproot->keys[i]) {
-                recursiveInsert(tmproot->child[i], k, v);
-                return;
+                return recursiveInsert(tmproot->child[i], k, v);
             }
         }
-        recursiveInsert(tmproot->child[tmproot->nKeys], k, v);
+        return recursiveInsert(tmproot->child[tmproot->nKeys], k, v);
     }
 }
 
-void BPlusTree::put(Key k, Value v) {
+bool BPlusTree::put(Key k, Value v) {
     if (root == nullptr) {
         root = makeNode();
         root->isLeaf = 1;
         root->isRoot = 1;
     }
-    recursiveInsert(root, k, v);
+    return recursiveInsert(root, k, v);
 }
 
 Value BPlusTree::get(Key k, Value *v) {
@@ -202,12 +209,31 @@ Value BPlusTree::get(Key k, Value *v) {
     return -1;
 }
 
-void BPlusTree::del(Key k, Value *v) {
+bool BPlusTree::del(Key k, Value *v) {
 
 }
 
-void BPlusTree::update(Key k, Value v) {
-
+bool BPlusTree::update(Key k, Value v) {
+    bptNode *tmp = root;
+    while (!tmp->isLeaf) {
+        bool flag = true;
+        for (int i = 0; i < tmp->nKeys; ++i) {
+            if (flag && k < tmp->keys[i]) {
+                tmp = tmp->child[i];
+                flag = false;
+                break;
+            }
+        }
+        if (flag)
+            tmp = tmp->child[tmp->nKeys];
+    }
+    for (int i = 0; i < tmp->nKeys; ++i) {
+        if (k == tmp->keys[i]) {
+            tmp->kv[i]->v = v;
+            return true;
+        }
+    }
+    return false;
 }
 
 void BPlusTree::printTree() {

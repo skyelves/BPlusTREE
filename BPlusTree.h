@@ -43,15 +43,15 @@ public:
 
     void spliteInnerNode(bptNode *node, Key k, bptNode *leftChild, bptNode *rightChild);
 
-    void recursiveInsert(bptNode *tmproot, Key k, Value v);
+    bool recursiveInsert(bptNode *tmproot, Key k, Value v);
 
-    void put(Key k, Value v);
+    bool put(Key k, Value v);
 
     Value get(Key k, Value *v);
 
-    void del(Key k, Value *v);
+    bool del(Key k, Value *v);
 
-    void update(Key k, Value v);
+    bool update(Key k, Value v);
 
     void printTree();
 };
