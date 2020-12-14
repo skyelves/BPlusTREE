@@ -127,67 +127,69 @@ void BPlusTree::spliteInnerNode(bptNode *node, Key k, bptNode *leftChild, bptNod
     }
 }
 
-bool BPlusTree::recursiveInsert(bptNode *tmproot, Key k, Value v) {
-    if (tmproot->isLeaf) {
-        //insert first
-        KeyValue *tmpkv = new KeyValue(k, v);
-        int place = findPlace(tmproot->keys, tmproot->nKeys, k);
-        if (place == -1) // k exists in B+Tree
-            return false;
-        for (int i = tmproot->nKeys - 1; i >= place; --i) {
-            tmproot->keys[i + 1] = tmproot->keys[i];
-            tmproot->kv[i + 1] = tmproot->kv[i];
-        }
-        tmproot->keys[place] = k;
-        tmproot->kv[place] = tmpkv;
-        tmproot->nKeys++;
-        //judge if full, if full,then splite
-        if (isFull(tmproot)) {
-            bptNode *leftNode = makeNode(true);
-            bptNode *rightNode = makeNode(true);
-            int mid = order / 2;
-            for (int i = 0; i < mid; ++i) {
-                leftNode->keys[i] = tmproot->keys[i];
-                leftNode->kv[i] = tmproot->kv[i];
-                leftNode->nKeys++;
-            }
-            int j = 0;
-            for (int i = mid; i < tmproot->nKeys; ++i) {
-                rightNode->keys[j] = tmproot->keys[i];
-                rightNode->kv[j] = tmproot->kv[i];
-                rightNode->nKeys++;
-                ++j;
-            }
-            //rightNode->nKeys = order + 1 - leftNode->nKeys;
-            leftNode->prev = tmproot->prev;
-            leftNode->next = rightNode;
-            rightNode->prev = leftNode;
-            rightNode->next = tmproot->next;
-            spliteInnerNode(findParent(tmproot), rightNode->keys[0], leftNode, rightNode);
-            delete tmproot;
-        }
-        return true;
-    } else {
-        for (int i = 0; i < tmproot->nKeys; ++i) {
-            if (k < tmproot->keys[i]) {
-                return recursiveInsert(tmproot->child[i], k, v);
-            }
-        }
-        return recursiveInsert(tmproot->child[tmproot->nKeys], k, v);
-    }
-}
-
 bool BPlusTree::put(Key k, Value v) {
     if (root == nullptr) {
         root = makeNode();
         root->isLeaf = 1;
         root->isRoot = 1;
     }
-    return recursiveInsert(root, k, v);
+    //find the leaf node
+    bptNode *tmp = root;
+    while (!tmp->isLeaf) {
+        bool flag = true;
+        for (int i = 0; i < tmp->nKeys; ++i) {
+            if (flag && k < tmp->keys[i]) {
+                tmp = tmp->child[i];
+                flag = false;
+                break;
+            }
+        }
+        if (flag)
+            tmp = tmp->child[tmp->nKeys];
+    }
+    //insert to the leaf node
+    KeyValue *tmpkv = new KeyValue(k, v);
+    int place = findPlace(tmp->keys, tmp->nKeys, k);
+    if (place == -1) // k exists in B+Tree
+        return false;
+    for (int i = tmp->nKeys - 1; i >= place; --i) {
+        tmp->keys[i + 1] = tmp->keys[i];
+        tmp->kv[i + 1] = tmp->kv[i];
+    }
+    tmp->keys[place] = k;
+    tmp->kv[place] = tmpkv;
+    tmp->nKeys++;
+    //judge if full, if full,then splite
+    if (isFull(tmp)) {
+        bptNode *leftNode = makeNode(true);
+        bptNode *rightNode = makeNode(true);
+        int mid = order / 2;
+        for (int i = 0; i < mid; ++i) {
+            leftNode->keys[i] = tmp->keys[i];
+            leftNode->kv[i] = tmp->kv[i];
+            leftNode->nKeys++;
+        }
+        int j = 0;
+        for (int i = mid; i < tmp->nKeys; ++i) {
+            rightNode->keys[j] = tmp->keys[i];
+            rightNode->kv[j] = tmp->kv[i];
+            rightNode->nKeys++;
+            ++j;
+        }
+        //rightNode->nKeys = order + 1 - leftNode->nKeys;
+        leftNode->prev = tmp->prev;
+        leftNode->next = rightNode;
+        rightNode->prev = leftNode;
+        rightNode->next = tmp->next;
+        spliteInnerNode(findParent(tmp), rightNode->keys[0], leftNode, rightNode);
+        delete tmp;
+    }
+    return true;
 }
 
 Value BPlusTree::get(Key k, Value *v) {
     bptNode *tmp = root;
+    //find the leaf node
     while (!tmp->isLeaf) {
         bool flag = true;
         for (int i = 0; i < tmp->nKeys; ++i) {

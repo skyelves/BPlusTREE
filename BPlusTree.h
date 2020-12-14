@@ -42,9 +42,7 @@ public:
     int findPlace(Key *keys, int nKeys, Key k);
 
     void spliteInnerNode(bptNode *node, Key k, bptNode *leftChild, bptNode *rightChild);
-
-    bool recursiveInsert(bptNode *tmproot, Key k, Value v);
-
+    
     bool put(Key k, Value v);
 
     Value get(Key k, Value *v);
