@@ -47,9 +47,9 @@ public:
 
     void put(Key k, Value v);
 
-    void get(Key k, Value &v);
+    Value get(Key k, Value *v);
 
-    void del(Key k, Value &v);
+    void del(Key k, Value *v);
 
     void update(Key k, Value v);
 

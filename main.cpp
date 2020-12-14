@@ -6,9 +6,11 @@ using namespace std;
 BPlusTree mytree(3);
 
 int main() {
-    for (int i =0; i < 4; ++i) {
-        mytree.put(i, 1);
+    Value *v = nullptr;
+    for (int i = 0; i < 4; ++i) {
+        mytree.put(i, i);
     }
     mytree.printTree();
+    cout << mytree.get(0, v)<<endl;
     return 0;
 }

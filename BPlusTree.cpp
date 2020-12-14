@@ -179,11 +179,30 @@ void BPlusTree::put(Key k, Value v) {
     recursiveInsert(root, k, v);
 }
 
-void BPlusTree::get(Key k, Value &v) {
-
+Value BPlusTree::get(Key k, Value *v) {
+    bptNode *tmp = root;
+    while (!tmp->isLeaf) {
+        bool flag = true;
+        for (int i = 0; i < tmp->nKeys; ++i) {
+            if (flag && k < tmp->keys[i]) {
+                tmp = tmp->child[i];
+                flag = false;
+                break;
+            }
+        }
+        if (flag)
+            tmp = tmp->child[tmp->nKeys];
+    }
+    for (int i = 0; i < tmp->nKeys; ++i) {
+        if (k == tmp->keys[i]) {
+            v = &(tmp->kv[i]->v);
+            return *v;
+        }
+    }
+    return -1;
 }
 
-void BPlusTree::del(Key k, Value &v) {
+void BPlusTree::del(Key k, Value *v) {
 
 }
 
