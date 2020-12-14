@@ -1,2 +1,2 @@
 # BPlusTREE
-an implementation of BPlusTree in C++
+An implementation of BPlusTree in C++
