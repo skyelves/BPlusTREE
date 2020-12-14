@@ -42,6 +42,23 @@ inline bool BPlusTree::isFull(bptNode *node) {
     return node->nKeys >= order;
 }
 
+bptNode* BPlusTree::findLeaf(Key k) {
+    bptNode *tmp = root;
+    while (!tmp->isLeaf) {
+        bool flag = true;
+        for (int i = 0; i < tmp->nKeys; ++i) {
+            if (flag && k < tmp->keys[i]) {
+                tmp = tmp->child[i];
+                flag = false;
+                break;
+            }
+        }
+        if (flag)
+            tmp = tmp->child[tmp->nKeys];
+    }
+    return tmp;
+}
+
 bptNode *BPlusTree::findParent(bptNode *node) {
     if (node->isRoot)
         return nullptr;
@@ -134,19 +151,7 @@ bool BPlusTree::put(Key k, Value v) {
         root->isRoot = 1;
     }
     //find the leaf node
-    bptNode *tmp = root;
-    while (!tmp->isLeaf) {
-        bool flag = true;
-        for (int i = 0; i < tmp->nKeys; ++i) {
-            if (flag && k < tmp->keys[i]) {
-                tmp = tmp->child[i];
-                flag = false;
-                break;
-            }
-        }
-        if (flag)
-            tmp = tmp->child[tmp->nKeys];
-    }
+    bptNode *tmp = findLeaf(k);
     //insert to the leaf node
     KeyValue *tmpkv = new KeyValue(k, v);
     int place = findPlace(tmp->keys, tmp->nKeys, k);
@@ -188,20 +193,7 @@ bool BPlusTree::put(Key k, Value v) {
 }
 
 Value BPlusTree::get(Key k, Value *v) {
-    bptNode *tmp = root;
-    //find the leaf node
-    while (!tmp->isLeaf) {
-        bool flag = true;
-        for (int i = 0; i < tmp->nKeys; ++i) {
-            if (flag && k < tmp->keys[i]) {
-                tmp = tmp->child[i];
-                flag = false;
-                break;
-            }
-        }
-        if (flag)
-            tmp = tmp->child[tmp->nKeys];
-    }
+    bptNode *tmp = findLeaf(k);
     for (int i = 0; i < tmp->nKeys; ++i) {
         if (k == tmp->keys[i]) {
             v = &(tmp->kv[i]->v);
@@ -216,19 +208,7 @@ bool BPlusTree::del(Key k, Value *v) {
 }
 
 bool BPlusTree::update(Key k, Value v) {
-    bptNode *tmp = root;
-    while (!tmp->isLeaf) {
-        bool flag = true;
-        for (int i = 0; i < tmp->nKeys; ++i) {
-            if (flag && k < tmp->keys[i]) {
-                tmp = tmp->child[i];
-                flag = false;
-                break;
-            }
-        }
-        if (flag)
-            tmp = tmp->child[tmp->nKeys];
-    }
+    bptNode *tmp = findLeaf(k);
     for (int i = 0; i < tmp->nKeys; ++i) {
         if (k == tmp->keys[i]) {
             tmp->kv[i]->v = v;

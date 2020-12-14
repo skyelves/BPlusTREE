@@ -7,7 +7,7 @@ BPlusTree mytree(3);
 
 int main() {
     Value *v = nullptr;
-    for (int i = 10; i >= 0; --i) {
+    for (int i = 0; i < 111; ++i) {
         mytree.put(i, i);
     }
     for (int i = 0; i < 10; ++i) {

@@ -37,12 +37,14 @@ public:
 
     inline bool isFull(bptNode *node);
 
+    bptNode *findLeaf(Key k);
+
     bptNode *findParent(bptNode *node); // we don't maintain parent pointers, instead we traverse to find the parent
 
     int findPlace(Key *keys, int nKeys, Key k);
 
     void spliteInnerNode(bptNode *node, Key k, bptNode *leftChild, bptNode *rightChild);
-    
+
     bool put(Key k, Value v);
 
     Value get(Key k, Value *v);
