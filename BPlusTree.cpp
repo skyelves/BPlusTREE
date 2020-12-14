@@ -42,7 +42,7 @@ inline bool BPlusTree::isFull(bptNode *node) {
     return node->nKeys >= order;
 }
 
-bptNode* BPlusTree::findLeaf(Key k) {
+bptNode *BPlusTree::findLeaf(Key k) {
     bptNode *tmp = root;
     while (!tmp->isLeaf) {
         bool flag = true;
@@ -86,7 +86,7 @@ int BPlusTree::findPlace(Key *keys, int nKeys, Key k) {
     // if exist, return -1
     int place = nKeys;
     for (int i = 0; i < nKeys; ++i) {
-        if (k == keys[i]){
+        if (k == keys[i]) {
             place = -1;
             break;
         }

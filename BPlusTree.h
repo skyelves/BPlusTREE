@@ -47,7 +47,7 @@ public:
 
     bool put(Key k, Value v);
 
-    Value get(Key k, Value *v);
+    Value get(Key k, Value *v = nullptr);
 
     bool del(Key k, Value *v);
 
