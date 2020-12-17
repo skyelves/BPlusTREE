@@ -17,6 +17,7 @@ public:
     Key *keys = nullptr;
     bptNode **child = nullptr;
     KeyValue **kv = nullptr;
+    bool *valid = nullptr;
 };
 
 // n pointers with (n-1) keys
@@ -24,6 +25,7 @@ public:
 class BPlusTree {
 private:
     int order = 3;
+    int minOrder = 1;
     bptNode *root = nullptr;
 
 public:
@@ -32,6 +34,8 @@ public:
     BPlusTree(int _order);
 
     ~BPlusTree();
+
+    void initialize(int _order);
 
     bptNode *makeNode(bool _isLeaf = false);
 
@@ -44,6 +48,14 @@ public:
     int findPlace(Key *keys, int nKeys, Key k);
 
     void spliteInnerNode(bptNode *node, Key k, bptNode *leftChild, bptNode *rightChild);
+
+    bool IndexA2B(Key A, Key B);
+
+    bool borrowFromLeft(bptNode *node, bptNode *left);
+
+    bool borrowFromRigjt(bptNode *node, bptNode *right);
+
+    bool mergeInnerNode(bptNode *node);
 
     bool put(Key k, Value v);
 

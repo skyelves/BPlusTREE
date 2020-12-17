@@ -1,24 +1,83 @@
 #include <iostream>
-#include <queue>
+#include <map>
 #include "BPlusTree.h"
 
 using namespace std;
 
-BPlusTree mytree(3);
-queue<int> myqueue;
+#define TESTNUM 100000
 
-bool testFunction(){
+BPlusTree mytree(3);
+map<Key, Value> mm;
+
+void interactiveTest() {
+    cout << "Input tree order: (default 3)  ";
+    int order = 3;
+    cin >> order;
+    mytree.initialize(order);
+    cout << "Put:p Get:g Del:d Quit:q" << endl << "Example:(when order == 3)" << endl
+         << "p 1" << endl
+         << "p 5" << endl
+         << "p 3" << endl
+         << "p 14" << endl
+         << "p 16" << endl;
+    mytree.put(1, 1);
+    mytree.put(5, 1);
+    mytree.put(3, 1);
+    mytree.put(14, 1);
+    mytree.put(16, 1);
+    cout << "Tree structure:" << endl;
+    mytree.printTree();
+    Value v;
+    mytree.del(1, &v);
+    mytree.del(5, &v);
+    mytree.del(3, &v);
+    mytree.del(14, &v);
+    mytree.del(16, &v);
+    char op;
+    int num;
+    cout << "Input operation: ";
+    while (cin >> op) {
+        switch (op) {
+            case 'p':
+                cin >> num;
+                mytree.put(num, num);
+                mytree.printTree();
+                break;
+            case 'g':
+                cin >> num;
+                cout << mytree.get(num, &v) << endl;
+                break;
+            case 'd':
+                cin >> num;
+                mytree.del(num, &v);
+                mytree.printTree();
+                break;
+            case 'q':
+                return;
+            default:
+                cout << "invalid operation,try again" << endl;
+                mytree.printTree();
+        }
+        cout << "Input operation: ";
+    }
+}
+
+bool testPut() {
     Value *v = nullptr;
-    for (int i = 0; i < 10000; ++i) {
-        int x = rand();
-        myqueue.push(x);
-        mytree.put(x, x);
+    for (int i = 0; i < TESTNUM; ++i) {
+        int x = rand() % TESTNUM;
+        int y = rand() % TESTNUM;
+        if (mm.find(x) == mm.end()) {
+            mm[x] = y;
+            mytree.put(x, y);
+        }
     }
     bool flag = true;
-    while (!myqueue.empty()) {
-        int x = myqueue.front();
-        myqueue.pop();
-        if (x != mytree.get(x, v)) {
+    while (!mm.empty()) {
+        Key x = mm.begin()->first;
+        Value y = mm.begin()->second;
+        mm.erase(mm.begin());
+        if (y != mytree.get(x, v)) {
             flag = false;
             break;
         }
@@ -26,9 +85,80 @@ bool testFunction(){
     return flag;
 }
 
-int main() {
-    cout<<testFunction()<<endl;
-//    mytree.printTree();
+bool testUpdate() {
+    Value *v = nullptr;
+    for (int i = 0; i < TESTNUM; ++i) {
+        int x = rand() % TESTNUM;
+        int y = rand() % TESTNUM;
+        if (mm.find(x) == mm.end()) {
+            mytree.put(x, y);
+        } else {
+            mytree.update(x, y);
+        }
+        mm[x] = y;
+    }
+    bool flag = true;
+    while (!mm.empty()) {
+        Key x = mm.begin()->first;
+        Value y = mm.begin()->second;
+        mm.erase(mm.begin());
+        Value res = mytree.get(x, v);
+        if (y != res) {
+            flag = false;
+            break;
+        }
+    }
+    return flag;
+}
 
+bool testDel() {
+//    Value v;
+//    for (int i = 6; i > 0; --i) {
+//        mytree.put(i, i);
+//    }
+//    mytree.printTree();
+//    for (int i = 6; i > 0; --  i) {
+//        mytree.del(i, &v);
+//        mytree.printTree();
+//    }
+    Value v;
+    for (int i = 0; i < TESTNUM; ++i) {
+        int x = rand() % TESTNUM;
+        int y = rand() % TESTNUM;
+        if (mm.find(x) == mm.end()) {
+            mytree.put(x, y);
+            mm[x] = y;
+        } else {
+            mytree.del(x, &v);
+            if (v != mm[x]) {
+//                cout << x << " " << v << " " << mm[x] << endl;
+                return false;
+            }
+            mm.erase(x);
+        }
+//        cout<<i<<endl<<endl;
+//        mytree.printTree();
+    }
+    bool flag = true;
+    while (!mm.empty()) {
+        Key x = mm.begin()->first;
+        Value y = mm.begin()->second;
+        if (y != mytree.get(x, &v)) {
+            cout << x << " " << v << " " << y << endl;
+            flag = false;
+            break;
+        }
+        mm.erase(mm.begin());
+
+    }
+    return flag;
+}
+
+int main() {
+//    cout << testPut() << endl;
+//    cout << testUpdate() << endl;
+//    cout << testDel() << endl;
+//    mytree.printTree();
+    interactiveTest();
     return 0;
 }
