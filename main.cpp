@@ -13,8 +13,8 @@ BPlusTree mytree(32);
 map<Key, Value> mm;
 
 void interactiveTest() {
-    cout << "Input tree order: (default 3)  ";
-    int order = 3;
+    cout << "Input tree order: (recommand 32)  ";
+    int order = 32;
     cin >> order;
     mytree.initialize(order);
     cout << "Put:p Get:g Del:d Quit:q" << endl << "Example:(when order == 3)" << endl
