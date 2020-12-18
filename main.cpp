@@ -1,12 +1,15 @@
 #include <iostream>
+#include <unistd.h>
+#include <stdio.h>
 #include <map>
+#include <sys/time.h>
 #include "BPlusTree.h"
 
 using namespace std;
 
-#define TESTNUM 100000
+#define TESTNUM 10000000
 
-BPlusTree mytree(3);
+BPlusTree mytree(32);
 map<Key, Value> mm;
 
 void interactiveTest() {
@@ -154,11 +157,24 @@ bool testDel() {
     return flag;
 }
 
+void speedTest() {
+    timeval start, ends;
+    gettimeofday(&start, NULL);
+    for (int i = 0; i < TESTNUM; ++i) {
+        int x = rand();
+        mytree.put(x, i);
+    }
+    gettimeofday(&ends, NULL);
+    int timeCost = (ends.tv_sec - start.tv_sec) * 1000000 + ends.tv_usec - start.tv_usec;
+    double throughPut = (double) TESTNUM / timeCost;
+    cout << "Put ThroughPut: " << throughPut << " Mops"<< endl;
+}
+
 int main() {
 //    cout << testPut() << endl;
 //    cout << testUpdate() << endl;
 //    cout << testDel() << endl;
-//    mytree.printTree();
-    interactiveTest();
+//    interactiveTest();
+    speedTest();
     return 0;
 }
