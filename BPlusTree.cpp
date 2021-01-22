@@ -37,7 +37,7 @@ BPlusTree::BPlusTree(int _order) {
 }
 
 BPlusTree::~BPlusTree() {
-
+    
 }
 
 void BPlusTree::initialize(int _order) {

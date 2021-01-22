@@ -165,9 +165,10 @@ void speedTest() {
         mytree.put(x, i);
     }
     gettimeofday(&ends, NULL);
-    int timeCost = (ends.tv_sec - start.tv_sec) * 1000000 + ends.tv_usec - start.tv_usec;
+    double timeCost = (ends.tv_sec - start.tv_sec) * 1000000 + ends.tv_usec - start.tv_usec;
     double throughPut = (double) TESTNUM / timeCost;
-    cout << "Put ThroughPut: " << throughPut << " Mops"<< endl;
+    cout << "Put " << TESTNUM << " kv pais in " << timeCost / 1000000 << " s" << endl;
+    cout << "Put ThroughPut: " << throughPut << " Mops" << endl;
 }
 
 int main() {

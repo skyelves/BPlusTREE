@@ -37,6 +37,8 @@ public:
 
     void initialize(int _order);
 
+    void clear();
+
     bptNode *makeNode(bool _isLeaf = false);
 
     inline bool isFull(bptNode *node);
