@@ -7,66 +7,15 @@
 
 using namespace std;
 
-#define TESTNUM 10000000
+#define TESTNUM 1000000
 
-BPlusTree mytree(32);
+string nodeNvmFile = "/aepmount/test0.txt";
+string kvNvmFile = "/aepmount/test1.txt";
+
+BPlusTree mytree(nodeNvmFile, kvNvmFile);
 map<Key, Value> mm;
 
-void interactiveTest() {
-    cout << "Input tree order: (recommand 32)  ";
-    int order = 32;
-    cin >> order;
-    mytree.initialize(order);
-    cout << "Put:p Get:g Del:d Quit:q" << endl << "Example:(when order == 3)" << endl
-         << "p 1" << endl
-         << "p 5" << endl
-         << "p 3" << endl
-         << "p 14" << endl
-         << "p 16" << endl;
-    mytree.put(1, 1);
-    mytree.put(5, 1);
-    mytree.put(3, 1);
-    mytree.put(14, 1);
-    mytree.put(16, 1);
-    cout << "Tree structure:" << endl;
-    mytree.printTree();
-    Value v;
-    mytree.del(1, &v);
-    mytree.del(5, &v);
-    mytree.del(3, &v);
-    mytree.del(14, &v);
-    mytree.del(16, &v);
-    char op;
-    int num;
-    cout << "Input operation: ";
-    while (cin >> op) {
-        switch (op) {
-            case 'p':
-                cin >> num;
-                mytree.put(num, num);
-                mytree.printTree();
-                break;
-            case 'g':
-                cin >> num;
-                cout << mytree.get(num, &v) << endl;
-                break;
-            case 'd':
-                cin >> num;
-                mytree.del(num, &v);
-                mytree.printTree();
-                break;
-            case 'q':
-                return;
-            default:
-                cout << "invalid operation,try again" << endl;
-                mytree.printTree();
-        }
-        cout << "Input operation: ";
-    }
-}
-
 bool testPut() {
-    Value *v = nullptr;
     for (int i = 0; i < TESTNUM; ++i) {
         int x = rand() % TESTNUM;
         int y = rand() % TESTNUM;
@@ -75,12 +24,13 @@ bool testPut() {
             mytree.put(x, y);
         }
     }
+
     bool flag = true;
     while (!mm.empty()) {
         Key x = mm.begin()->first;
         Value y = mm.begin()->second;
         mm.erase(mm.begin());
-        if (y != mytree.get(x, v)) {
+        if (y != mytree.get(x)) {
             flag = false;
             break;
         }
@@ -89,7 +39,6 @@ bool testPut() {
 }
 
 bool testUpdate() {
-    Value *v = nullptr;
     for (int i = 0; i < TESTNUM; ++i) {
         int x = rand() % TESTNUM;
         int y = rand() % TESTNUM;
@@ -105,7 +54,7 @@ bool testUpdate() {
         Key x = mm.begin()->first;
         Value y = mm.begin()->second;
         mm.erase(mm.begin());
-        Value res = mytree.get(x, v);
+        Value res = mytree.get(x);
         if (y != res) {
             flag = false;
             break;
@@ -146,8 +95,8 @@ bool testDel() {
     while (!mm.empty()) {
         Key x = mm.begin()->first;
         Value y = mm.begin()->second;
-        if (y != mytree.get(x, &v)) {
-            cout << x << " " << v << " " << y << endl;
+        if (y != mytree.get(x)) {
+            cout << x << " " << y << endl;
             flag = false;
             break;
         }
@@ -171,11 +120,11 @@ void speedTest() {
     cout << "Put ThroughPut: " << throughPut << " Mops" << endl;
 }
 
+
 int main() {
 //    cout << testPut() << endl;
 //    cout << testUpdate() << endl;
 //    cout << testDel() << endl;
-//    interactiveTest();
     speedTest();
     return 0;
 }

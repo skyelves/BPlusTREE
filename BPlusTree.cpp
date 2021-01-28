@@ -2,53 +2,54 @@
 // Created by 王柯 on 2020-12-08.
 //
 
-#include <iostream>
-#include <queue>
 #include "BPlusTree.h"
 
 using namespace std;
 
-bptNode *BPlusTree::makeNode(bool _isLeaf) {
-    bptNode *newNode = new bptNode;
-    newNode->keys = new Key[order];
-    for (int i = 0; i < order; ++i) {
+bptNode *BPlusTree::makeNode(bool _isLeaf, bool _onNvm) {
+    // mmap a place on NVM and use placement new to allocate a node
+    bptNode *newNode = allocator.allocateNode(_onNvm);
+    for (int i = 0; i < ORDER; ++i) {
         newNode->keys[i] = -1;
     }
     newNode->isLeaf = _isLeaf;
-    if (_isLeaf)
-        newNode->kv = new KeyValue *[order + 1];
-    else
-        newNode->child = new bptNode *[order + 1];
     return newNode;
 }
 
 BPlusTree::BPlusTree() {
-    order = 3;
-    minOrder = 1;
-    root = makeNode(true);
+    minOrder = (ORDER + 1) / 2 - 1;
+    root = makeNode(true, 0);
     root->isRoot = 1;
 }
 
-BPlusTree::BPlusTree(int _order) {
-    order = _order;
-    minOrder = (order + 1) / 2 - 1;
-    root = makeNode(true);
+BPlusTree::BPlusTree(string _nodeNvmFile, string _kvNvmFile) {
+    allocator.initNodeNvmSpace(_nodeNvmFile);
+    allocator.initKvNvmSpace(_kvNvmFile);
+    minOrder = (ORDER + 1) / 2 - 1;
+    root = makeNode(true, 0);
     root->isRoot = 1;
 }
 
 BPlusTree::~BPlusTree() {
-    
+
 }
 
-void BPlusTree::initialize(int _order) {
-    order = _order;
-    minOrder = (order + 1) / 2 - 1;
-    root = makeNode(true);
+void BPlusTree::initialize() {
+    minOrder = (ORDER + 1) / 2 - 1;
+    root = makeNode(true, 0);
     root->isRoot = 1;
 }
 
+void BPlusTree::initNodeNvm(string _fileName) {
+    allocator.initNodeNvmSpace(_fileName);
+}
+
+void BPlusTree::initKvNvm(string _fileName) {
+    allocator.initKvNvmSpace(_fileName);
+}
+
 inline bool BPlusTree::isFull(bptNode *node) {
-    return node->nKeys >= order;
+    return node->nKeys >= ORDER;
 }
 
 bptNode *BPlusTree::findLeaf(Key k) {
@@ -107,10 +108,12 @@ int BPlusTree::findPlace(Key *keys, int nKeys, Key k) {
     return place;
 }
 
-void BPlusTree::spliteInnerNode(bptNode *node, Key k, bptNode *leftChild, bptNode *rightChild) {
+void BPlusTree::spliteInnerNode(stack<bptNode *>parentNode, Key k, bptNode *leftChild, bptNode *rightChild) {
+    bptNode *node = parentNode.top();
+    parentNode.pop();
     if (node == nullptr) {
         //splite root
-        node = makeNode();
+        node = makeNode(false, 0);
         node->isRoot = 1;
         node->nKeys = 1;
         node->keys[0] = k;
@@ -130,9 +133,9 @@ void BPlusTree::spliteInnerNode(bptNode *node, Key k, bptNode *leftChild, bptNod
         node->child[place + 1] = rightChild;
         //judge if full, if full,then splite
         if (isFull(node)) {
-            bptNode *leftNode = makeNode();
-            bptNode *rightNode = makeNode();
-            int mid = order / 2;
+            bptNode *leftNode = makeNode(false, 0);
+            bptNode *rightNode = makeNode(false, 0);
+            int mid = ORDER / 2;
             for (int i = 0; i < mid; ++i) {
                 leftNode->keys[i] = node->keys[i];
                 leftNode->child[i] = node->child[i];
@@ -147,21 +150,51 @@ void BPlusTree::spliteInnerNode(bptNode *node, Key k, bptNode *leftChild, bptNod
                 ++j;
             }
             rightNode->child[j] = node->child[node->nKeys];
-            spliteInnerNode(findParent(node), node->keys[mid], leftNode, rightNode);
-            delete node;
+            spliteInnerNode(parentNode, node->keys[mid], leftNode, rightNode);
+//            delete node;
         }
     }
 }
 
 bool BPlusTree::put(Key k, Value v) {
+    stack<bptNode*> parentNode;
+    parentNode.push(nullptr);
     if (root == nullptr) {
-        root = makeNode(true);
+        root = makeNode(true, 0);
         root->isRoot = 1;
     }
     //find the leaf node
-    bptNode *tmp = findLeaf(k);
+//    bptNode *tmp = findLeaf(k);
+    queue<bptNode *> lockedNode;
+    bptNode *tmp = root;
+    mylock.exclusive_lock(tmp);
+    while (!tmp->isLeaf) {
+        parentNode.push(tmp);
+        bool flag = true;
+        for (int i = 0; i < tmp->nKeys; ++i) {
+            if (flag && k < tmp->keys[i]) {
+                mylock.exclusive_lock(tmp->child[i]);
+                if (tmp->nKeys < ORDER - 1)//unlock safe node
+                    mylock.exclusive_unlock(tmp);
+                else
+                    lockedNode.push(tmp);
+                tmp = tmp->child[i];
+                flag = false;
+                break;
+            }
+        }
+        if (flag) {
+            mylock.exclusive_lock(tmp->child[tmp->nKeys]);
+            if (tmp->nKeys < ORDER - 1)
+                mylock.exclusive_unlock(tmp);
+            else
+                lockedNode.push(tmp);
+            tmp = tmp->child[tmp->nKeys];
+        }
+    }
     //insert to the leaf node
-    KeyValue *tmpkv = new KeyValue(k, v);
+//    KeyValue *tmpkv = new KeyValue(k, v);
+    KeyValue *tmpkv = allocator.allocateKv(k, v, 0);
     int place = findPlace(tmp->keys, tmp->nKeys, k);
     if (place == -1) // k exists in B+Tree
         return false;
@@ -174,9 +207,9 @@ bool BPlusTree::put(Key k, Value v) {
     tmp->nKeys++;
     //judge if full, if full,then splite
     if (isFull(tmp)) {
-        bptNode *leftNode = makeNode(true);
-        bptNode *rightNode = makeNode(true);
-        int mid = order / 2;
+        bptNode *leftNode = makeNode(true, 0);
+        bptNode *rightNode = makeNode(true, 0);
+        int mid = ORDER / 2;
         for (int i = 0; i < mid; ++i) {
             leftNode->keys[i] = tmp->keys[i];
             leftNode->kv[i] = tmp->kv[i];
@@ -189,25 +222,54 @@ bool BPlusTree::put(Key k, Value v) {
             rightNode->nKeys++;
             ++j;
         }
-        //rightNode->nKeys = order + 1 - leftNode->nKeys;
+        //rightNode->nKeys = ORDER + 1 - leftNode->nKeys;
         leftNode->prev = tmp->prev;
         leftNode->next = rightNode;
         rightNode->prev = leftNode;
         rightNode->next = tmp->next;
-        spliteInnerNode(findParent(tmp), rightNode->keys[0], leftNode, rightNode);
-        delete tmp;
+        spliteInnerNode(parentNode, rightNode->keys[0], leftNode, rightNode);
+//        delete tmp;
+    }
+    mylock.exclusive_unlock(tmp);
+    while(!lockedNode.empty()){
+        tmp = lockedNode.front();
+        lockedNode.pop();
+        mylock.exclusive_unlock(tmp);
     }
     return true;
 }
 
-Value BPlusTree::get(Key k, Value *v) {
-    bptNode *tmp = findLeaf(k);
+Value BPlusTree::get(Key k) {
+    Value v;
+//    bptNode *tmp = findLeaf(k);
+    bptNode *tmp = root;
+    mylock.shared_lock(tmp);
+    while (!tmp->isLeaf) {
+        bool flag = true;
+        for (int i = 0; i < tmp->nKeys; ++i) {
+            if (flag && k < tmp->keys[i]) {
+                mylock.shared_lock(tmp->child[i]);
+                mylock.shared_unlock(tmp);
+                tmp = tmp->child[i];
+                flag = false;
+                break;
+            }
+        }
+        if (flag) {
+            mylock.shared_lock(tmp->child[tmp->nKeys]);
+            mylock.shared_unlock(tmp);
+            tmp = tmp->child[tmp->nKeys];
+        }
+
+    }
     for (int i = 0; i < tmp->nKeys; ++i) {
         if (k == tmp->keys[i]) {
-            v = &(tmp->kv[i]->v);
-            return *v;
+            v = tmp->kv[i]->v;
+            mylock.shared_unlock(tmp);
+            return v;
         }
     }
+    mylock.shared_unlock(tmp);
     return -1;
 }
 
@@ -310,7 +372,7 @@ bool BPlusTree::mergeInnerNode(bptNode *node) {
             node->nKeys++;
             right->nKeys--;
         } else if (left != nullptr) {
-            bptNode *newnode = makeNode();
+            bptNode *newnode = makeNode(false, 0);
             newnode->nKeys = left->nKeys + node->nKeys + 1;
             for (int i = 0; i < left->nKeys; ++i) {
                 newnode->keys[i] = left->keys[i];
@@ -330,10 +392,10 @@ bool BPlusTree::mergeInnerNode(bptNode *node) {
             }
             parent->nKeys--;
             mergeInnerNode(parent);
-            delete node;
-            delete left;
+//            delete node;
+//            delete left;
         } else {
-            bptNode *newnode = makeNode();
+            bptNode *newnode = makeNode(false, 0);
             newnode->nKeys = right->nKeys + node->nKeys + 1;
             for (int i = 0; i < node->nKeys; ++i) {
                 newnode->keys[i] = node->keys[i];
@@ -353,8 +415,8 @@ bool BPlusTree::mergeInnerNode(bptNode *node) {
             }
             parent->nKeys--;
             mergeInnerNode(parent);
-            delete node;
-            delete right;
+//            delete node;
+//            delete right;
         }
     }
 }
@@ -371,7 +433,7 @@ bool BPlusTree::del(Key k, Value *v) {
     if (place == -1)
         return false;
     *v = tmp->kv[place]->v;
-    delete tmp->kv[place];
+//    delete tmp->kv[place];
     //delete k first
     for (int i = place + 1; i < tmp->nKeys; ++i) {
         tmp->keys[i - 1] = tmp->keys[i];
@@ -418,7 +480,7 @@ bool BPlusTree::del(Key k, Value *v) {
             IndexA2B(oldTmpIndex, tmp->keys[0]);
         } else if (left != nullptr) {
             //merge left leaf node
-            bptNode *newnode = makeNode(true);
+            bptNode *newnode = makeNode(true, 0);
             newnode->nKeys = left->nKeys + tmp->nKeys;
             for (int i = 0; i < left->nKeys; ++i) {
                 newnode->keys[i] = left->keys[i];
@@ -438,11 +500,11 @@ bool BPlusTree::del(Key k, Value *v) {
             //always equal, but keep the behavior same as merge right
             IndexA2B(left->keys[0], newnode->keys[0]);
             mergeInnerNode(parent);
-            delete left;
-            delete tmp;
+//            delete left;
+//            delete tmp;
         } else {
             //merge right leaf node
-            bptNode *newnode = makeNode(true);
+            bptNode *newnode = makeNode(true, 0);
             newnode->nKeys = right->nKeys + tmp->nKeys;
             for (int i = 0; i < tmp->nKeys; ++i) {
                 newnode->keys[i] = tmp->keys[i];
@@ -462,8 +524,8 @@ bool BPlusTree::del(Key k, Value *v) {
             //necessary, when tmp->nKeys==0
             IndexA2B(tmp->keys[0], newnode->keys[0]);
             mergeInnerNode(parent);
-            delete right;
-            delete tmp;
+//            delete right;
+//            delete tmp;
         }
     }
     return true;

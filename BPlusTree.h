@@ -5,41 +5,47 @@
 #ifndef TREE_BPLUSTREE_H
 #define TREE_BPLUSTREE_H
 
+#include <iostream>
+#include <queue>
+#include <stack>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <sys/mman.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include <new>
 #include "struct.h"
+#include "allocator.h"
+#include "lockManager.h"
 
 using namespace std;
 
-class bptNode : public Node {
-public:
-    int nKeys = 0;
-    bptNode *prev = nullptr;
-    bptNode *next = nullptr;
-    Key *keys = nullptr;
-    bptNode **child = nullptr;
-    KeyValue **kv = nullptr;
-    bool *valid = nullptr;
-};
-
 // n pointers with (n-1) keys
 // https://www.cs.usfca.edu/~galles/visualization/BPlusTree.html
+// http://mysql.taobao.org/monthly/2018/09/01/ algorithm 4 and algorithm 5
 class BPlusTree {
 private:
-    int order = 3;
-    int minOrder = 1;
+     int minOrder = 15;
     bptNode *root = nullptr;
+    ALLOCATOR allocator;
+    lockManager mylock;
 
 public:
     BPlusTree();
 
-    BPlusTree(int _order);
+    BPlusTree(string _nodeNvmFile, string _kvNvmFile);
 
     ~BPlusTree();
 
-    void initialize(int _order);
+    void initialize();
+
+    void initNodeNvm(string _fileName);
+
+    void initKvNvm(string _fileName);
 
     void clear();
 
-    bptNode *makeNode(bool _isLeaf = false);
+    bptNode *makeNode(bool _isLeaf = false, bool _onNvm = false);
 
     inline bool isFull(bptNode *node);
 
@@ -49,7 +55,7 @@ public:
 
     int findPlace(Key *keys, int nKeys, Key k);
 
-    void spliteInnerNode(bptNode *node, Key k, bptNode *leftChild, bptNode *rightChild);
+    void spliteInnerNode(stack<bptNode *> parentNode, Key k, bptNode *leftChild, bptNode *rightChild);
 
     bool IndexA2B(Key A, Key B);
 
@@ -61,7 +67,7 @@ public:
 
     bool put(Key k, Value v);
 
-    Value get(Key k, Value *v = nullptr);
+    Value get(Key k);
 
     bool del(Key k, Value *v);
 
