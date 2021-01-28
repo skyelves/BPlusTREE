@@ -55,7 +55,7 @@ public:
 
     int findPlace(Key *keys, int nKeys, Key k);
 
-    void spliteInnerNode(stack<bptNode *> parentNode, Key k, bptNode *leftChild, bptNode *rightChild);
+    void spliteInnerNode(bptNode **parentNode, int parentNodeIndex, Key k, bptNode *leftChild, bptNode *rightChild);
 
     bool IndexA2B(Key A, Key B);
 

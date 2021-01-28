@@ -108,9 +108,9 @@ int BPlusTree::findPlace(Key *keys, int nKeys, Key k) {
     return place;
 }
 
-void BPlusTree::spliteInnerNode(stack<bptNode *>parentNode, Key k, bptNode *leftChild, bptNode *rightChild) {
-    bptNode *node = parentNode.top();
-    parentNode.pop();
+void
+BPlusTree::spliteInnerNode(bptNode **parentNode, int parentNodeIndex, Key k, bptNode *leftChild, bptNode *rightChild) {
+    bptNode *node = parentNode[parentNodeIndex];
     if (node == nullptr) {
         //splite root
         node = makeNode(false, 0);
@@ -150,15 +150,16 @@ void BPlusTree::spliteInnerNode(stack<bptNode *>parentNode, Key k, bptNode *left
                 ++j;
             }
             rightNode->child[j] = node->child[node->nKeys];
-            spliteInnerNode(parentNode, node->keys[mid], leftNode, rightNode);
+            spliteInnerNode(parentNode, parentNodeIndex - 1, node->keys[mid], leftNode, rightNode);
 //            delete node;
         }
     }
 }
 
 bool BPlusTree::put(Key k, Value v) {
-    stack<bptNode*> parentNode;
-    parentNode.push(nullptr);
+    bptNode *parentNode[10];
+    int parentNodelen = 0;
+    parentNode[parentNodelen++] = nullptr;
     if (root == nullptr) {
         root = makeNode(true, 0);
         root->isRoot = 1;
@@ -169,7 +170,7 @@ bool BPlusTree::put(Key k, Value v) {
     bptNode *tmp = root;
     mylock.exclusive_lock(tmp);
     while (!tmp->isLeaf) {
-        parentNode.push(tmp);
+        parentNode[parentNodelen++] = tmp;
         bool flag = true;
         for (int i = 0; i < tmp->nKeys; ++i) {
             if (flag && k < tmp->keys[i]) {
@@ -227,11 +228,11 @@ bool BPlusTree::put(Key k, Value v) {
         leftNode->next = rightNode;
         rightNode->prev = leftNode;
         rightNode->next = tmp->next;
-        spliteInnerNode(parentNode, rightNode->keys[0], leftNode, rightNode);
+        spliteInnerNode(parentNode, parentNodelen - 1, rightNode->keys[0], leftNode, rightNode);
 //        delete tmp;
     }
     mylock.exclusive_unlock(tmp);
-    while(!lockedNode.empty()){
+    while (!lockedNode.empty()) {
         tmp = lockedNode.front();
         lockedNode.pop();
         mylock.exclusive_unlock(tmp);
