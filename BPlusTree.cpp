@@ -176,32 +176,32 @@ bool BPlusTree::put(Key k, Value v) {
         for (int i = 0; i < tmp->nKeys; ++i) {
             if (flag && k < tmp->keys[i]) {
                 nextTmp = tmp->child[i];
-                mylock.exclusive_lock(nextTmp);
-                if (tmp->nKeys < ORDER - 1)//unlock safe node
-                    mylock.exclusive_unlock(tmp);
-                else
-                    lockedNode.push(tmp);
-                tmp = nextTmp;
                 flag = false;
                 break;
             }
         }
         if (flag) {
             nextTmp = tmp->child[tmp->nKeys];
-            mylock.exclusive_lock(nextTmp);
-            if (tmp->nKeys < ORDER - 1)
-                mylock.exclusive_unlock(tmp);
-            else
-                lockedNode.push(tmp);
-            tmp = nextTmp;
         }
+        mylock.exclusive_lock(nextTmp);
+        if (tmp->nKeys < ORDER - 1)//unlock safe node
+            mylock.exclusive_unlock(tmp);
+        else
+            lockedNode.push(tmp);
+        tmp = nextTmp;
     }
     //insert to the leaf node
 //    KeyValue *tmpkv = new KeyValue(k, v);
     KeyValue *tmpkv = allocator.allocateKv(k, v, 0);
     int place = findPlace(tmp->keys, tmp->nKeys, k);
-    if (place == -1) // k exists in B+Tree
+    if (place == -1) {// k exists in B+Tree
+        mylock.exclusive_unlock(tmp);
+        while (!lockedNode.empty()) {
+            mylock.exclusive_unlock(lockedNode.front());
+            lockedNode.pop();
+        }
         return false;
+    }
     for (int i = tmp->nKeys - 1; i >= place; --i) {
         tmp->keys[i + 1] = tmp->keys[i];
         tmp->kv[i + 1] = tmp->kv[i];
@@ -236,9 +236,8 @@ bool BPlusTree::put(Key k, Value v) {
     }
     mylock.exclusive_unlock(tmp);
     while (!lockedNode.empty()) {
-        tmp = lockedNode.front();
+        mylock.exclusive_unlock(lockedNode.front());
         lockedNode.pop();
-        mylock.exclusive_unlock(tmp);
     }
     return true;
 }
