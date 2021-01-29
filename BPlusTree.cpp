@@ -168,29 +168,32 @@ bool BPlusTree::put(Key k, Value v) {
 //    bptNode *tmp = findLeaf(k);
     queue<bptNode *> lockedNode;
     bptNode *tmp = root;
+    bptNode *nextTmp = nullptr;
     mylock.exclusive_lock(tmp);
     while (!tmp->isLeaf) {
         parentNode[parentNodelen++] = tmp;
         bool flag = true;
         for (int i = 0; i < tmp->nKeys; ++i) {
             if (flag && k < tmp->keys[i]) {
-                mylock.exclusive_lock(tmp->child[i]);
+                nextTmp = tmp->child[i];
+                mylock.exclusive_lock(nextTmp);
                 if (tmp->nKeys < ORDER - 1)//unlock safe node
                     mylock.exclusive_unlock(tmp);
                 else
                     lockedNode.push(tmp);
-                tmp = tmp->child[i];
+                tmp = nextTmp;
                 flag = false;
                 break;
             }
         }
         if (flag) {
-            mylock.exclusive_lock(tmp->child[tmp->nKeys]);
+            nextTmp = tmp->child[tmp->nKeys];
+            mylock.exclusive_lock(nextTmp);
             if (tmp->nKeys < ORDER - 1)
                 mylock.exclusive_unlock(tmp);
             else
                 lockedNode.push(tmp);
-            tmp = tmp->child[tmp->nKeys];
+            tmp = nextTmp;
         }
     }
     //insert to the leaf node
