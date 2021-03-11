@@ -13,6 +13,7 @@ bptNode *BPlusTree::makeNode(bool _isLeaf, bool _onNvm) {
         newNode->keys[i] = -1;
     }
     newNode->isLeaf = _isLeaf;
+    newNode->valid = true;
     return newNode;
 }
 
@@ -108,9 +109,15 @@ int BPlusTree::findPlace(Key *keys, int nKeys, Key k) {
     return place;
 }
 
+void setInvalid(bptNode *node) {
+    node->valid = false;
+}
+
+
 void
-BPlusTree::spliteInnerNode(bptNode **parentNode, int parentNodeIndex, Key k, bptNode *leftChild, bptNode *rightChild) {
-    bptNode *node = parentNode[parentNodeIndex];
+BPlusTree::spliteInnerNode(bptNode **parentNodeList, int parentNodeIndex, Key k, bptNode *leftChild,
+                           bptNode *rightChild) {
+    bptNode *node = parentNodeList[parentNodeIndex];
     if (node == nullptr) {
         //splite root
         node = makeNode(false, 0);
@@ -150,8 +157,9 @@ BPlusTree::spliteInnerNode(bptNode **parentNode, int parentNodeIndex, Key k, bpt
                 ++j;
             }
             rightNode->child[j] = node->child[node->nKeys];
-            spliteInnerNode(parentNode, parentNodeIndex - 1, node->keys[mid], leftNode, rightNode);
+            spliteInnerNode(parentNodeList, parentNodeIndex - 1, node->keys[mid], leftNode, rightNode);
 //            delete node;
+            setInvalid(node);
         }
     }
 }
@@ -169,7 +177,7 @@ bool BPlusTree::put(Key k, Value v) {
     queue<bptNode *> lockedNode;
     bptNode *tmp = root;
     bptNode *nextTmp = nullptr;
-    mylock.exclusive_lock(tmp);
+//    mylock.exclusive_lock(tmp);
     while (!tmp->isLeaf) {
         parentNode[parentNodelen++] = tmp;
         bool flag = true;
@@ -183,11 +191,20 @@ bool BPlusTree::put(Key k, Value v) {
         if (flag) {
             nextTmp = tmp->child[tmp->nKeys];
         }
-        mylock.exclusive_lock(nextTmp);
-        if (tmp->nKeys < ORDER - 1)//unlock safe node
-            mylock.exclusive_unlock(tmp);
-        else
-            lockedNode.push(tmp);
+//        mylock.exclusive_lock(nextTmp);
+
+        if (!nextTmp->valid) {
+//            mylock.exclusive_unlock(tmp);
+//            while (!lockedNode.empty()) {
+//                mylock.exclusive_unlock(lockedNode.front());
+//                lockedNode.pop();
+//            }
+            return put(k, v);
+        }
+//        if (tmp->nKeys < ORDER - 1)//unlock safe node
+//            mylock.exclusive_unlock(tmp);
+//        else
+//            lockedNode.push(tmp);
         tmp = nextTmp;
     }
     //insert to the leaf node
@@ -195,11 +212,12 @@ bool BPlusTree::put(Key k, Value v) {
     KeyValue *tmpkv = allocator.allocateKv(k, v, 0);
     int place = findPlace(tmp->keys, tmp->nKeys, k);
     if (place == -1) {// k exists in B+Tree
-        mylock.exclusive_unlock(tmp);
-        while (!lockedNode.empty()) {
-            mylock.exclusive_unlock(lockedNode.front());
-            lockedNode.pop();
-        }
+//        tmp->kv[place]->v = v;
+//        mylock.exclusive_unlock(tmp);
+//        while (!lockedNode.empty()) {
+//            mylock.exclusive_unlock(lockedNode.front());
+//            lockedNode.pop();
+//        }
         return false;
     }
     for (int i = tmp->nKeys - 1; i >= place; --i) {
@@ -233,12 +251,13 @@ bool BPlusTree::put(Key k, Value v) {
         rightNode->next = tmp->next;
         spliteInnerNode(parentNode, parentNodelen - 1, rightNode->keys[0], leftNode, rightNode);
 //        delete tmp;
+        setInvalid(tmp);
     }
-    mylock.exclusive_unlock(tmp);
-    while (!lockedNode.empty()) {
-        mylock.exclusive_unlock(lockedNode.front());
-        lockedNode.pop();
-    }
+//    mylock.exclusive_unlock(tmp);
+//    while (!lockedNode.empty()) {
+//        mylock.exclusive_unlock(lockedNode.front());
+//        lockedNode.pop();
+//    }
     return true;
 }
 
@@ -246,21 +265,21 @@ Value BPlusTree::get(Key k) {
     Value v;
 //    bptNode *tmp = findLeaf(k);
     bptNode *tmp = root;
-    mylock.shared_lock(tmp);
+//    mylock.shared_lock(tmp);
     while (!tmp->isLeaf) {
         bool flag = true;
         for (int i = 0; i < tmp->nKeys; ++i) {
             if (flag && k < tmp->keys[i]) {
-                mylock.shared_lock(tmp->child[i]);
-                mylock.shared_unlock(tmp);
+//                mylock.shared_lock(tmp->child[i]);
+//                mylock.shared_unlock(tmp);
                 tmp = tmp->child[i];
                 flag = false;
                 break;
             }
         }
         if (flag) {
-            mylock.shared_lock(tmp->child[tmp->nKeys]);
-            mylock.shared_unlock(tmp);
+//            mylock.shared_lock(tmp->child[tmp->nKeys]);
+//            mylock.shared_unlock(tmp);
             tmp = tmp->child[tmp->nKeys];
         }
 
@@ -268,11 +287,11 @@ Value BPlusTree::get(Key k) {
     for (int i = 0; i < tmp->nKeys; ++i) {
         if (k == tmp->keys[i]) {
             v = tmp->kv[i]->v;
-            mylock.shared_unlock(tmp);
+//            mylock.shared_unlock(tmp);
             return v;
         }
     }
-    mylock.shared_unlock(tmp);
+//    mylock.shared_unlock(tmp);
     return -1;
 }
 
@@ -397,6 +416,8 @@ bool BPlusTree::mergeInnerNode(bptNode *node) {
             mergeInnerNode(parent);
 //            delete node;
 //            delete left;
+            setInvalid(node);
+            setInvalid(left);
         } else {
             bptNode *newnode = makeNode(false, 0);
             newnode->nKeys = right->nKeys + node->nKeys + 1;
@@ -420,6 +441,8 @@ bool BPlusTree::mergeInnerNode(bptNode *node) {
             mergeInnerNode(parent);
 //            delete node;
 //            delete right;
+            setInvalid(node);
+            setInvalid(right);
         }
     }
 }
@@ -505,6 +528,8 @@ bool BPlusTree::del(Key k, Value *v) {
             mergeInnerNode(parent);
 //            delete left;
 //            delete tmp;
+            setInvalid(tmp);
+            setInvalid(left);
         } else {
             //merge right leaf node
             bptNode *newnode = makeNode(true, 0);
@@ -529,6 +554,8 @@ bool BPlusTree::del(Key k, Value *v) {
             mergeInnerNode(parent);
 //            delete right;
 //            delete tmp;
+            setInvalid(tmp);
+            setInvalid(right);
         }
     }
     return true;

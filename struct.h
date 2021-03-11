@@ -48,7 +48,7 @@ public:
     Key keys[ORDER] = {0};
     bptNode *child[ORDER + 1];
     KeyValue *kv[ORDER + 1];
-    bool *valid = nullptr;
+    bool valid;
     shared_mutex lock;
 };
 

@@ -3,115 +3,43 @@
 #include <stdio.h>
 #include <map>
 #include <sys/time.h>
+#include <pthread.h>
 #include "BPlusTree.h"
 
 using namespace std;
 
 #define TESTNUM 1000000
 
+int numThread = 1;
+
 string nodeNvmFile = "/aepmount/test0.txt";
 string kvNvmFile = "/aepmount/test1.txt";
-
+//adaptive_radix_tree *mytree= new_adaptive_radix_tree();
 BPlusTree mytree(nodeNvmFile, kvNvmFile);
+
 map<Key, Value> mm;
 
-bool testPut() {
+void *putFunc(void *) {
     for (int i = 0; i < TESTNUM; ++i) {
-        int x = rand() % TESTNUM;
-        int y = rand() % TESTNUM;
-        if (mm.find(x) == mm.end()) {
-            mm[x] = y;
-            mytree.put(x, y);
-        }
+        int x = rand();
+//        adaptive_radix_tree_put(mytree, (const void *) &x, 8);
+        mytree.put(x, i);
     }
-
-    bool flag = true;
-    while (!mm.empty()) {
-        Key x = mm.begin()->first;
-        Value y = mm.begin()->second;
-        mm.erase(mm.begin());
-        if (y != mytree.get(x)) {
-            flag = false;
-            break;
-        }
-    }
-    return flag;
-}
-
-bool testUpdate() {
-    for (int i = 0; i < TESTNUM; ++i) {
-        int x = rand() % TESTNUM;
-        int y = rand() % TESTNUM;
-        if (mm.find(x) == mm.end()) {
-            mytree.put(x, y);
-        } else {
-            mytree.update(x, y);
-        }
-        mm[x] = y;
-    }
-    bool flag = true;
-    while (!mm.empty()) {
-        Key x = mm.begin()->first;
-        Value y = mm.begin()->second;
-        mm.erase(mm.begin());
-        Value res = mytree.get(x);
-        if (y != res) {
-            flag = false;
-            break;
-        }
-    }
-    return flag;
-}
-
-bool testDel() {
-//    Value v;
-//    for (int i = 6; i > 0; --i) {
-//        mytree.put(i, i);
-//    }
-//    mytree.printTree();
-//    for (int i = 6; i > 0; --  i) {
-//        mytree.del(i, &v);
-//        mytree.printTree();
-//    }
-    Value v;
-    for (int i = 0; i < TESTNUM; ++i) {
-        int x = rand() % TESTNUM;
-        int y = rand() % TESTNUM;
-        if (mm.find(x) == mm.end()) {
-            mytree.put(x, y);
-            mm[x] = y;
-        } else {
-            mytree.del(x, &v);
-            if (v != mm[x]) {
-//                cout << x << " " << v << " " << mm[x] << endl;
-                return false;
-            }
-            mm.erase(x);
-        }
-//        cout<<i<<endl<<endl;
-//        mytree.printTree();
-    }
-    bool flag = true;
-    while (!mm.empty()) {
-        Key x = mm.begin()->first;
-        Value y = mm.begin()->second;
-        if (y != mytree.get(x)) {
-            cout << x << " " << y << endl;
-            flag = false;
-            break;
-        }
-        mm.erase(mm.begin());
-
-    }
-    return flag;
 }
 
 void speedTest() {
     timeval start, ends;
     gettimeofday(&start, NULL);
-    for (int i = 0; i < TESTNUM; ++i) {
-        int x = rand();
-        mytree.put(x, i);
+//    put();
+    pthread_t *tids = new pthread_t[numThread];
+    for (int i = 0; i < numThread; ++i) {
+        int ret = pthread_create(&tids[i], NULL, &putFunc, NULL);
+        if (ret != 0) {
+            cout << "pthread_create error: error_code=" << ret << endl;
+        }
+    }
+    for (int j = 0; j < numThread; ++j) {
+        pthread_join(tids[j], NULL);
     }
     gettimeofday(&ends, NULL);
     double timeCost = (ends.tv_sec - start.tv_sec) * 1000000 + ends.tv_usec - start.tv_usec;
