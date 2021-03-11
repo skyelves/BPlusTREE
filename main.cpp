@@ -13,8 +13,7 @@ using namespace std;
 int numThread = 1;
 
 string nodeNvmFile = "/aepmount/test0.txt";
-string kvNvmFile = "/aepmount/test1.txt";
-//adaptive_radix_tree *mytree= new_adaptive_radix_tree();
+string kvNvmFile = "/aepmount1/test1.txt";
 BPlusTree mytree(nodeNvmFile, kvNvmFile);
 
 map<Key, Value> mm;
@@ -22,12 +21,11 @@ map<Key, Value> mm;
 void *putFunc(void *) {
     for (int i = 0; i < TESTNUM; ++i) {
         int x = rand();
-//        adaptive_radix_tree_put(mytree, (const void *) &x, 8);
         mytree.put(x, i);
     }
 }
 
-void speedTest() {
+void putSpeedTest() {
     timeval start, ends;
     gettimeofday(&start, NULL);
 //    put();
@@ -50,9 +48,6 @@ void speedTest() {
 
 
 int main() {
-//    cout << testPut() << endl;
-//    cout << testUpdate() << endl;
-//    cout << testDel() << endl;
-    speedTest();
+    putSpeedTest();
     return 0;
 }

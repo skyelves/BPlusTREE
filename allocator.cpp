@@ -4,13 +4,16 @@
 
 #include "allocator.h"
 
+#define TESTNUM 1000000
+
+
 ALLOCATOR::ALLOCATOR() {
     nodeNvmCnt = 0;
     nodeDramCnt = 0;
     kvNvmCnt = 0;
     kvDramCnt = 0;
-    nodeDramSpace = new bptNode[1000000];
-    kvDramSpace = new KeyValue[1000000];
+    nodeDramSpace = new bptNode[TESTNUM];
+    kvDramSpace = new KeyValue[TESTNUM];
 }
 
 ALLOCATOR::~ALLOCATOR() {
@@ -36,15 +39,15 @@ void ALLOCATOR::initKvNvmSpace(string _fileName) {
 bptNode *ALLOCATOR::allocateNode(bool _onNvm) {
     bptNode *res = nullptr;
     if (_onNvm && nodeNvmSpace != nullptr) {
-        nodeNvmLock.lock();
+//        nodeNvmLock.lock();
         res = new(nodeNvmSpace + nodeNvmCnt) bptNode;
         nodeNvmCnt++;
-        nodeNvmLock.unlock();
+//        nodeNvmLock.unlock();
     } else {
-        nodeDramLock.lock();
+//        nodeDramLock.lock();
         res = new(nodeDramSpace + nodeDramCnt) bptNode;
         nodeDramCnt++;
-        nodeDramLock.unlock();
+//        nodeDramLock.unlock();
     }
     return res;
 }
@@ -53,15 +56,15 @@ bptNode *ALLOCATOR::allocateNode(bool _onNvm) {
 KeyValue *ALLOCATOR::allocateKv(Key k, Value v, bool _onNvm) {
     KeyValue *res = nullptr;
     if (_onNvm && kvNvmSpace != nullptr) {
-        kvNvmLock.lock();
+//        kvNvmLock.lock();
         res = new(kvNvmSpace + kvNvmCnt) KeyValue;
         kvNvmCnt++;
-        kvNvmLock.unlock();
+//        kvNvmLock.unlock();
     } else {
-        kvDramLock.lock();
+//        kvDramLock.lock();
         res = new(kvDramSpace + kvDramCnt) KeyValue;
         kvDramCnt++;
-        kvDramLock.unlock();
+//        kvDramLock.unlock();
     }
     res->k = k;
     res->v = v;
