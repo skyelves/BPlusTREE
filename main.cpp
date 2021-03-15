@@ -2,6 +2,8 @@
 #include <unistd.h>
 #include <stdio.h>
 #include <map>
+#include <x86intrin.h>
+#include <chrono>
 #include <sys/time.h>
 #include <fcntl.h>
 #include <pthread.h>
@@ -10,7 +12,7 @@
 using namespace std;
 
 #define TESTNUM 10000000
-#define NUMTHREAD 32
+#define NUMTHREAD 16
 #define FILE_SIZE 1<<30
 
 string nodeNvmFile = "/aepmount/test0.txt";
@@ -38,10 +40,13 @@ void *rw(void *_arg) {
     int type = arg->type;
     int *counter = arg->counter;
     for (int i = 0; i < TESTNUM; ++i) {
-        if (type == 0)
+        if (type == 0) {
             o = counter[myindex[i]];
-        else if (type == 1)
+        } else if (type == 1) {
             counter[myindex[i]] = i;
+            _mm_mfence();
+            _mm_clflush((char *)(counter+myindex[i]));
+        }
     }
 }
 
