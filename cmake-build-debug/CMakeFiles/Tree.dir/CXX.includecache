@@ -6,10 +6,6 @@
 
 #IncludeRegexTransform: 
 
-/Users/wangke/CLionProjects/Tree/BPlusTree.cpp
-BPlusTree.h
-/Users/wangke/CLionProjects/Tree/BPlusTree.h
-
 /Users/wangke/CLionProjects/Tree/BPlusTree.h
 iostream
 -
@@ -69,6 +65,22 @@ pthread.h
 -
 struct.h
 /Users/wangke/CLionProjects/Tree/struct.h
+
+/Users/wangke/CLionProjects/Tree/main.cpp
+iostream
+-
+unistd.h
+-
+stdio.h
+-
+map
+-
+sys/time.h
+-
+pthread.h
+-
+BPlusTree.h
+/Users/wangke/CLionProjects/Tree/BPlusTree.h
 
 /Users/wangke/CLionProjects/Tree/struct.h
 cstdint

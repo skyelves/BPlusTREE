@@ -3,20 +3,23 @@
 #include <stdio.h>
 #include <map>
 #include <sys/time.h>
+#include <fcntl.h>
 #include <pthread.h>
 #include "BPlusTree.h"
 
 using namespace std;
 
-#define TESTNUM 1000000
-
-int numThread = 1;
+#define TESTNUM 10000000
+#define NUMTHREAD 32
+#define FILE_SIZE 1<<30
 
 string nodeNvmFile = "/aepmount/test0.txt";
 string kvNvmFile = "/aepmount1/test1.txt";
 BPlusTree mytree(nodeNvmFile, kvNvmFile);
 
 map<Key, Value> mm;
+int myindex[TESTNUM] = {0};
+int o = 0;
 
 void *putFunc(void *) {
     for (int i = 0; i < TESTNUM; ++i) {
@@ -25,18 +28,35 @@ void *putFunc(void *) {
     }
 }
 
+struct rw_arg {
+    int type;//0 read 1 write 2 mix
+    int *counter;
+};
+
+void *rw(void *_arg) {
+    rw_arg *arg = (rw_arg *) _arg;
+    int type = arg->type;
+    int *counter = arg->counter;
+    for (int i = 0; i < TESTNUM; ++i) {
+        if (type == 0)
+            o = counter[myindex[i]];
+        else if (type == 1)
+            counter[myindex[i]] = i;
+    }
+}
+
 void putSpeedTest() {
     timeval start, ends;
     gettimeofday(&start, NULL);
 //    put();
-    pthread_t *tids = new pthread_t[numThread];
-    for (int i = 0; i < numThread; ++i) {
+    pthread_t *tids = new pthread_t[NUMTHREAD];
+    for (int i = 0; i < NUMTHREAD; ++i) {
         int ret = pthread_create(&tids[i], NULL, &putFunc, NULL);
         if (ret != 0) {
             cout << "pthread_create error: error_code=" << ret << endl;
         }
     }
-    for (int j = 0; j < numThread; ++j) {
+    for (int j = 0; j < NUMTHREAD; ++j) {
         pthread_join(tids[j], NULL);
     }
     gettimeofday(&ends, NULL);
@@ -46,8 +66,58 @@ void putSpeedTest() {
     cout << "Put ThroughPut: " << throughPut << " Mops" << endl;
 }
 
+void test() {
+    string nvm[2] = {"/aepmount/test", "/aepmount1/test"};
+    for (int i = 0; i < TESTNUM; ++i) {
+        myindex[i] = rand() % ((FILE_SIZE) / 8);
+    }
+    int nvm_fd;
+    int *counter[NUMTHREAD];
+    rw_arg test_arg[NUMTHREAD];
+    for (int i = 0; i < NUMTHREAD; ++i) {
+        string nvm_file = nvm[i % 2];
+        nvm_file += to_string(i / 2);
+        nvm_file += ".txt";
+        if (access(nvm_file.c_str(), F_OK) != -1) {
+            nvm_fd = open(nvm_file.c_str(), O_CREAT | O_RDWR, 0644);
+        } else {
+            nvm_fd = open(nvm_file.c_str(), O_CREAT | O_RDWR, 0644);
+            if (posix_fallocate(nvm_fd, 0, FILE_SIZE) < 0)
+                puts("fallocate fail");
+        }
+        counter[i] = (int *) mmap(NULL, FILE_SIZE, PROT_READ | PROT_WRITE, MAP_SYNC | MAP_SHARED_VALIDATE, nvm_fd, 0);
+        close(nvm_fd);
+
+        test_arg[i].type = i % 2;
+//        test_arg[i].type = (i / 4) % 2;
+        test_arg[i].counter = counter[i];
+    }
+    timeval start, ends;
+    gettimeofday(&start, NULL);
+//    put();
+    pthread_t *tids = new pthread_t[NUMTHREAD];
+    for (int i = 0; i < NUMTHREAD; ++i) {
+        int ret = pthread_create(&tids[i], NULL, &rw, &(test_arg[i]));
+        if (ret != 0) {
+            cout << "pthread_create error: error_code=" << ret << endl;
+        }
+    }
+    for (int j = 0; j < NUMTHREAD; ++j) {
+        pthread_join(tids[j], NULL);
+    }
+    gettimeofday(&ends, NULL);
+    double timeCost = (ends.tv_sec - start.tv_sec) * 1000000 + ends.tv_usec - start.tv_usec;
+    double throughPut = (double) TESTNUM * NUMTHREAD / timeCost;
+    cout << "Put " << TESTNUM * NUMTHREAD << " kv pais in " << timeCost / 1000000 << " s" << endl;
+    cout << "Put ThroughPut: " << throughPut << " Mops" << endl;
+    for (int i = 0; i < NUMTHREAD; ++i) {
+        munmap(counter[i], FILE_SIZE);
+    }
+}
+
 
 int main() {
-    putSpeedTest();
+//    putSpeedTest();
+    test();
     return 0;
 }

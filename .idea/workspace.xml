@@ -13,8 +13,9 @@
   <component name="ChangeListManager">
     <list default="true" id="18f97ec7-48be-420b-8cc9-cc1ad7181db2" name="Default Changelist" comment="">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/BPlusTree.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/BPlusTree.cpp" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/allocator.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/allocator.cpp" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/Tree.dir/CXX.includecache" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/Tree.dir/CXX.includecache" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/Tree.dir/main.cpp.o" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/CMakeFiles/Tree.dir/main.cpp.o" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/cmake-build-debug/Tree" beforeDir="false" afterPath="$PROJECT_DIR$/cmake-build-debug/Tree" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.cpp" beforeDir="false" afterPath="$PROJECT_DIR$/main.cpp" afterDir="false" />
     </list>
     <ignored path="$PROJECT_DIR$/cmake-build-debug/" />
@@ -33,20 +34,11 @@
   </component>
   <component name="FileEditorManager">
     <leaf SIDE_TABS_SIZE_LIMIT_KEY="300">
-      <file pinned="false" current-in-tab="true">
+      <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/BPlusTree.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="185">
-              <caret line="211" column="50" selection-start-line="211" selection-start-column="50" selection-end-line="211" selection-end-column="50" />
-            </state>
-          </provider>
-        </entry>
-      </file>
-      <file pinned="false" current-in-tab="false">
-        <entry file="file://$PROJECT_DIR$/allocator.cpp">
-          <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="194">
-              <caret line="55" column="31" selection-start-line="55" selection-start-column="21" selection-end-line="55" selection-end-column="31" />
+            <state relative-caret-position="510">
+              <caret line="30" column="21" selection-start-line="30" selection-start-column="21" selection-end-line="30" selection-end-column="21" />
             </state>
           </provider>
         </entry>
@@ -54,8 +46,8 @@
       <file pinned="false" current-in-tab="false">
         <entry file="file://$PROJECT_DIR$/allocator.h">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="352">
-              <caret line="46" column="19" selection-start-line="46" selection-start-column="19" selection-end-line="46" selection-end-column="19" />
+            <state relative-caret-position="629">
+              <caret line="37" selection-start-line="37" selection-end-line="37" />
               <folding>
                 <element signature="e#90#109#0" expanded="true" />
               </folding>
@@ -64,12 +56,23 @@
         </entry>
       </file>
       <file pinned="false" current-in-tab="false">
+        <entry file="file://$PROJECT_DIR$/allocator.cpp">
+          <provider selected="true" editor-type-id="text-editor">
+            <state relative-caret-position="442">
+              <caret line="26" column="20" selection-start-line="26" selection-start-column="20" selection-end-line="26" selection-end-column="20" />
+            </state>
+          </provider>
+        </entry>
+      </file>
+      <file pinned="false" current-in-tab="true">
         <entry file="file://$PROJECT_DIR$/main.cpp">
           <provider selected="true" editor-type-id="text-editor">
-            <state relative-caret-position="174">
-              <caret line="12" column="18" lean-forward="true" selection-start-line="12" selection-start-column="18" selection-end-line="12" selection-end-column="18" />
+            <state relative-caret-position="737">
+              <caret line="92" column="31" selection-start-line="92" selection-start-column="31" selection-end-line="92" selection-end-column="31" />
               <folding>
                 <element signature="e#0#19#0" expanded="true" />
+                <element signature="e#369#490#0" />
+                <element signature="e#492#1267#0" />
               </folding>
             </state>
           </provider>
@@ -87,8 +90,6 @@
       <find>_order</find>
       <find>new</find>
       <find>makeNode\(false, 1\)</find>
-      <find>makeNode</find>
-      <find>allocator</find>
       <find>makeNode\(false, 0\)</find>
       <find>makeNode\(true, 1\)</find>
       <find>get</find>
@@ -102,6 +103,13 @@
       <find>art_node_add_child</find>
       <find>valid =</find>
       <find>mylock</find>
+      <find>allocateKv</find>
+      <find>makeNode(false, 0)</find>
+      <find>makeNode(false, 1)</find>
+      <find>allocator</find>
+      <find>makeNode</find>
+      <find>1&lt;&lt;30</find>
+      <find>1 &lt;&lt; 30</find>
     </findStrings>
     <replaceStrings>
       <replace>makeNode\(true,1\)</replace>
@@ -109,6 +117,9 @@
       <replace>makeNode\(false, 0\)</replace>
       <replace>makeNode\(false, 1\)</replace>
       <replace>makeNode\(true, 0\)</replace>
+      <replace>makeNode(false, 1)</replace>
+      <replace>makeNode(true, 0)</replace>
+      <replace>FILE_SIZE</replace>
     </replaceStrings>
   </component>
   <component name="Git.Settings">
@@ -132,14 +143,14 @@
         <option value="$PROJECT_DIR$/CMakeLists.txt" />
         <option value="$PROJECT_DIR$/hash_tree.cpp" />
         <option value="$PROJECT_DIR$/hash_tree.h" />
-        <option value="$PROJECT_DIR$/main.cpp" />
         <option value="$PROJECT_DIR$/allocator.cpp" />
         <option value="$PROJECT_DIR$/BPlusTree.cpp" />
+        <option value="$PROJECT_DIR$/main.cpp" />
       </list>
     </option>
   </component>
   <component name="OCFindUsagesOptions" text="true" ivars="false" properties="true" derivedClasses="false" />
-  <component name="ProjectFrameBounds" extendedState="6" fullScreen="true">
+  <component name="ProjectFrameBounds" fullScreen="true">
     <option name="width" value="1680" />
     <option name="height" value="1050" />
   </component>
@@ -227,12 +238,13 @@
       <workItem from="1613724077770" duration="6000" />
       <workItem from="1614841014490" duration="44000" />
       <workItem from="1614841670170" duration="1640000" />
-      <workItem from="1615442899801" duration="1934000" />
+      <workItem from="1615442899801" duration="5354000" />
+      <workItem from="1615784970037" duration="4932000" />
     </task>
     <servers />
   </component>
   <component name="TimeTrackingManager">
-    <option name="totallyTimeSpent" value="175960000" />
+    <option name="totallyTimeSpent" value="184312000" />
   </component>
   <component name="TodoView">
     <todo-panel id="selected-file">
@@ -248,7 +260,7 @@
     <editor active="true" />
     <layout>
       <window_info id="Favorites" order="0" sideWeight="0.5009901" side_tool="true" weight="0.14589989" />
-      <window_info content_ui="combo" id="Project" order="1" sideWeight="0.4990099" visible="true" weight="0.12460064" />
+      <window_info content_ui="combo" id="Project" order="1" sideWeight="0.4990099" visible="true" weight="0.1256656" />
       <window_info id="Structure" order="2" side_tool="true" weight="0.25" />
       <window_info anchor="bottom" id="Terminal" order="0" weight="0.32871288" />
       <window_info anchor="bottom" id="Event Log" order="1" side_tool="true" weight="0.32959184" />
@@ -257,7 +269,7 @@
       <window_info anchor="bottom" id="Message" order="4" />
       <window_info anchor="bottom" id="Find" order="5" weight="0.32970297" />
       <window_info anchor="bottom" id="Run" order="6" weight="0.2990099" />
-      <window_info active="true" anchor="bottom" id="Debug" order="7" visible="true" weight="0.37425742" />
+      <window_info anchor="bottom" id="Debug" order="7" weight="0.37425742" />
       <window_info anchor="bottom" id="CMake" order="8" weight="0.32970297" />
       <window_info anchor="bottom" id="Cvs" order="9" weight="0.25" />
       <window_info anchor="bottom" id="Inspection" order="10" weight="0.4" />
@@ -454,17 +466,17 @@
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/README.md">
+      <provider editor-type-id="text-editor">
+        <state relative-caret-position="34">
+          <caret line="2" lean-forward="true" selection-start-line="2" selection-end-line="2" />
+        </state>
+      </provider>
       <provider selected="true" editor-type-id="split-provider[text-editor;markdown-preview-editor]">
         <state split_layout="SPLIT">
           <first_editor relative-caret-position="323">
             <caret line="19" column="35" selection-start-line="19" selection-start-column="35" selection-end-line="19" selection-end-column="35" />
           </first_editor>
           <second_editor />
-        </state>
-      </provider>
-      <provider editor-type-id="text-editor">
-        <state relative-caret-position="34">
-          <caret line="2" lean-forward="true" selection-start-line="2" selection-end-line="2" />
         </state>
       </provider>
     </entry>
@@ -520,20 +532,8 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/hash_tree.cpp">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="119">
-          <caret line="7" selection-start-line="7" selection-end-line="7" />
-        </state>
-      </provider>
-    </entry>
-    <entry file="file://$PROJECT_DIR$/hash_tree.h">
-      <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="255">
-          <caret line="15" column="17" selection-start-line="15" selection-start-column="17" selection-end-line="15" selection-end-column="17" />
-        </state>
-      </provider>
-    </entry>
+    <entry file="file://$PROJECT_DIR$/hash_tree.cpp" />
+    <entry file="file://$PROJECT_DIR$/hash_tree.h" />
     <entry file="file://$PROJECT_DIR$/bobhash32.h">
       <provider selected="true" editor-type-id="text-editor">
         <state relative-caret-position="321">
@@ -558,20 +558,17 @@
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/main.cpp">
+    <entry file="file://$PROJECT_DIR$/BPlusTree.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="174">
-          <caret line="12" column="18" lean-forward="true" selection-start-line="12" selection-start-column="18" selection-end-line="12" selection-end-column="18" />
-          <folding>
-            <element signature="e#0#19#0" expanded="true" />
-          </folding>
+        <state relative-caret-position="510">
+          <caret line="30" column="21" selection-start-line="30" selection-start-column="21" selection-end-line="30" selection-end-column="21" />
         </state>
       </provider>
     </entry>
     <entry file="file://$PROJECT_DIR$/allocator.h">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="352">
-          <caret line="46" column="19" selection-start-line="46" selection-start-column="19" selection-end-line="46" selection-end-column="19" />
+        <state relative-caret-position="629">
+          <caret line="37" selection-start-line="37" selection-end-line="37" />
           <folding>
             <element signature="e#90#109#0" expanded="true" />
           </folding>
@@ -580,15 +577,27 @@
     </entry>
     <entry file="file://$PROJECT_DIR$/allocator.cpp">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="194">
-          <caret line="55" column="31" selection-start-line="55" selection-start-column="21" selection-end-line="55" selection-end-column="31" />
+        <state relative-caret-position="442">
+          <caret line="26" column="20" selection-start-line="26" selection-start-column="20" selection-end-line="26" selection-end-column="20" />
         </state>
       </provider>
     </entry>
-    <entry file="file://$PROJECT_DIR$/BPlusTree.cpp">
+    <entry file="file:///Library/Developer/CommandLineTools/SDKs/MacOSX10.15.sdk/usr/include/strings.h">
       <provider selected="true" editor-type-id="text-editor">
-        <state relative-caret-position="185">
-          <caret line="211" column="50" selection-start-line="211" selection-start-column="50" selection-end-line="211" selection-end-column="50" />
+        <state relative-caret-position="407">
+          <caret line="72" column="9" selection-start-line="72" selection-start-column="9" selection-end-line="72" selection-end-column="9" />
+        </state>
+      </provider>
+    </entry>
+    <entry file="file://$PROJECT_DIR$/main.cpp">
+      <provider selected="true" editor-type-id="text-editor">
+        <state relative-caret-position="737">
+          <caret line="92" column="31" selection-start-line="92" selection-start-column="31" selection-end-line="92" selection-end-column="31" />
+          <folding>
+            <element signature="e#0#19#0" expanded="true" />
+            <element signature="e#369#490#0" />
+            <element signature="e#492#1267#0" />
+          </folding>
         </state>
       </provider>
     </entry>
